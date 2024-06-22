@@ -5,8 +5,8 @@ CFLAGS += -I./inc
 LFLAGS := -Wall
 
 OBJ := assembler.o 
-OBJ += lib/utils.o
-OBJ += lib/str.o
+OBJ += src/utils.o
+OBJ += src/str.o
 OBJ += res/resource.o
 TARGET = assembler
 

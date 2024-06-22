@@ -440,5 +440,4 @@ void debug(const char * fmt, ...);
 void abortf(const char * fmt, ...);
 void errorf(const char * file, const int line, const char * fmt, ...);
 
-
 #endif // __HEADER_H
