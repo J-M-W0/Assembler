@@ -2,18 +2,19 @@
 #define __UTILS_H
 #include "header.h"
 
-bool upper(const char c);
-bool lower(const char c);
-bool letter(const char c);
-bool alpha(const char c);
-bool alnum(const char c);
-bool digit(const char c);
-bool hexdigit(const char c);
-bool octdigit(const char c);
-bool bindigit(const char c);
-bool isEOF(const char c);
-bool newline(const char c);
-bool whitespace(const char c);
+bool is_upper(const char c);
+bool is_lower(const char c);
+bool is_letter(const char c);
+bool is_alpha(const char c);
+bool is_alnum(const char c);
+bool is_label(const char c);
+bool is_digit(const char c);
+bool is_hexdigit(const char c);
+bool is_octdigit(const char c);
+bool is_bindigit(const char c);
+bool is_EOF(const char c);
+bool is_newline(const char c);
+bool is_whitespace(const char c);
 
 void skipwhite(void);
 void skipnewline(void);

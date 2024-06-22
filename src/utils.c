@@ -35,7 +35,7 @@ void readin(void) {
             // handling line-comment.
             do {
                 CharIn = fgetc(In);
-            } while (!newline(CharIn));
+            } while (!is_newline(CharIn));
             skipnewline();
         }
         else if (CharIn == '*') {
@@ -105,7 +105,7 @@ void readin(void) {
     else if (CharIn == ';') {
         do {
             CharIn = fgetc(In);
-        } while (!newline(CharIn));
+        } while (!is_newline(CharIn));
         skipnewline();
     }
 }
@@ -122,50 +122,53 @@ void scan(void) {
     clear();
 }
 
-bool upper(const char c) {
+bool is_upper(const char c) {
     return c >= 'a' && c <= 'z';
 }
-bool lower(const char c) {
+bool is_lower(const char c) {
     return c >= 'A' && c <= 'Z';
 }
-bool letter(const char c) {
-    return upper(c) || lower(c);
+bool is_letter(const char c) {
+    return is_upper(c) || is_lower(c);
 }
-bool alpha(const char c) {
-    return letter(c) || c == '_';
+bool is_alpha(const char c) {
+    return is_letter(c) || c == '_';
 }
-bool alnum(const char c) {
-    return alpha(c) || digit(c);
+bool is_alnum(const char c) {
+    return is_alpha(c) || is_digit(c);
 }
-bool digit(const char c) {
+bool is_label(const char c) {
+    return is_alnum(c) || c == '.';
+}
+bool is_digit(const char c) {
     return c >= '0' && c <= '9';
 }
-bool hexdigit(const char c) {
-    return digit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+bool is_hexdigit(const char c) {
+    return is_digit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
 }
-bool octdigit(const char c) {
+bool is_octdigit(const char c) {
     return c >= '0' && c <= '7';
 }
-bool bindigit(const char c) {
+bool is_bindigit(const char c) {
     return c == '0' || c == '1';
 }
-bool isEOF(const char c) {
+bool is_EOF(const char c) {
     return c == EOF;
 }
-bool newline(const char c) {
+bool is_newline(const char c) {
     return c == '\r' || c == '\n';
 }
-bool whitespace(const char c) {
+bool is_whitespace(const char c) {
     return c == '\t' || c == ' ';
 }
 
 void skipwhite(void) {
-    while (whitespace(CharIn)) {
+    while (is_whitespace(CharIn)) {
         readin();
     }
 }
 void skipnewline(void) {
-    while (newline(CharIn) || whitespace(CharIn)) {
+    while (is_newline(CharIn) || is_whitespace(CharIn)) {
         readin();
     }
 }
