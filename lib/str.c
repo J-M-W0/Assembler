@@ -77,7 +77,7 @@ int strtoi(const char * str) {
                 imm += 0;
             }
             else {
-                abortf("Error @strtoi while converting binary stirng '%s' into numeric value!", str);
+                abortf("@strtoi: failed to convert binary stirng '%s' into numeric value!", str);
             }
             binstr++;
         }
@@ -195,9 +195,7 @@ char * itostr(int n, int bit) {
         return dec2bin_16bit(n);
     }
     else {
-        abortf("Error @itostr: "
-        "can not be converting %d to %d bit binary string!",
-        n, bit);
+        abortf("@itostr: can not be converting %d to %d bit binary string!", n, bit);
         exit(1);
     }
 }
