@@ -1,5 +1,8 @@
 #include "header.h"
+#include "table.h"
 #include "utils.h"
+#include "str.h"
+#include "instru.h"
 
 extern FILE * In;
 extern FILE * Out;
@@ -8,12 +11,38 @@ extern TToken Token;
 extern String Symbol;
 extern u64 Section;
 extern u64 Location;
+extern Instruction * Instru;
 extern const u8 instru_size_list[];
 extern const char * const kwlist[];
 extern const char * const opcode_list[];
 extern const char * const register_name_list[];
 extern const char * const register_code_list[];
+extern TTable * LabelTable;
 
+extern char * in;
+extern char * out;
+
+void parse_input(int argc, const char * const argv[]) {
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "-i") == 0) {
+            assertf(i + 1 < argc, "Failed to parse input file name!");
+            in = strdup(argv[i+1]);
+            assertf(strloc(in, ".as") != -1, "%s is not a valid input file name, expected with .as extension!", in);
+            return;
+        }
+    }
+    abortf("Failed to parse input file name");
+}
+void parse_output(int argc, const char * const argv[]) {
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "-o") == 0) {
+            assertf(i + 1 < argc, "Failed to parse output file name!");
+            out = strdup(argv[i+1]);
+            return;
+        }
+    }
+    out = strdup("a.out");
+}
 int search(const char * const table[], const char * value) {
     assertf(table != nil, "Error @func {search}: @param {table} (null)");
     assertf(value != nil, "Value @func {search}: @param {value} (null)");
@@ -118,8 +147,150 @@ void clear(void) {
     }
 }
 
+static void parse_ident(void) {
+    assert(is_label(CharIn));
+
+    while (is_label(CharIn)) {
+        Symbol = strapp(Symbol, (char *) &CharIn);
+        readin();
+    }
+    skipnewline();
+}
+
+static void parse_hex_digit(void) {
+    assert(is_hexdigit(CharIn));
+
+    while (is_hexdigit(CharIn)) {
+        Symbol = strapp(Symbol, (char *) &CharIn);
+        readin();
+    }
+    skipnewline();
+}
+static void parse_oct_digit(void) {
+    assert(is_octdigit(CharIn));
+    
+    while (is_octdigit(CharIn)) {
+        Symbol = strapp(Symbol, (char *) &CharIn);
+        readin();
+    }
+    skipnewline();
+}
+static void parse_bin_digit(void) {
+    assert(is_bindigit(CharIn));
+    
+    while (is_bindigit(CharIn)) {
+        Symbol = strapp(Symbol, (char *) &CharIn);
+        readin();
+    }
+    skipnewline();
+}
+static void parse_digit(void) {
+    assert(is_digit(CharIn));
+
+    if (CharIn == '0') {
+        Symbol = strapp(Symbol, (char *) &CharIn);
+        readin();
+        Symbol = strapp(Symbol, (char *) &CharIn);
+        if (CharIn == 'x' || CharIn == 'X') {
+            readin();
+            parse_hex_digit();
+        }
+        else if (CharIn == 'b' || CharIn == 'B') {
+            readin();
+            parse_bin_digit();
+        }
+        else if (is_octdigit(CharIn)) {
+            readin();
+            parse_oct_digit();
+        }
+        else {
+            abortf("Error: %s is not a valid numeric string!", Symbol);
+        }
+        return;
+    }
+
+    while (is_digit(CharIn)) {
+        Symbol = strapp(Symbol, (char *) &CharIn);
+        readin();
+    }
+    skipnewline();
+}
 void scan(void) {
     clear();
+    skipnewline();
+    if (is_alpha(CharIn) || CharIn == '.') {
+        parse_ident();
+        int index = search(kwlist, Symbol);
+        if (index == -1) {
+            Token = TokenLabel;
+        }
+        else {
+            Token = (TToken) index;
+        }
+    }
+    else if (is_digit(CharIn)) {
+        parse_digit();
+        Token = TokenInteger;
+    }
+    else if (CharIn == ':') {
+        Token = TokenColon;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == ',') {
+        Token = TokenComma;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == '$') {
+        Token = TokenDollar;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == '\'') {
+        Token = TokenQuote;
+        readin();
+    }
+    else if (CharIn == '\"') {
+        Token = TokenQuote2;
+        readin();
+    }
+    else if (CharIn == '(') {
+        Token = TokenLParen;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == ')') {
+        Token = TokenRParen;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == '[') {
+        Token = TokenLBracket;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == ']') {
+        Token = TokenRBracket;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == '{') {
+        Token = TokenLBrace;
+        readin();
+        skipnewline();
+    }
+    else if (CharIn == '}') {
+        Token = TokenRBrace;
+        readin();
+        skipnewline();
+    }
+    else if (is_EOF(CharIn)) {
+        Token = TokenEOF;
+    }
+    else {
+        abortf("Unknown symbol: %c", CharIn);
+    }
 }
 
 bool is_upper(const char c) {
@@ -173,7 +344,6 @@ void skipnewline(void) {
     }
 }
 
-
 bool is_register(const char * reg) {
     assertf(reg != nil, "Error @func {is_register}: @param {reg} is (null)");
     return search(register_name_list, reg) != -1;
@@ -201,77 +371,130 @@ void writeln(const char * fmt, ...) {
     va_end(args);
 }
 
-void update_location(u64 byte_size) {
-    assertf(Section <= UINT8_MAX, "Section Overflow: 0x%lx", Section);
-    Location += byte_size;
-    if (Location > UINT16_MAX) {
-        Section += 1;
-        Location -= UINT16_MAX;
+int hex2int(const char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    else if (c >= 'a' && c <= 'f') {
+        return c - 'a';
+    }
+    else if (c >= 'A' && c <= 'F') {
+        return c - 'A';
+    }
+    return -1;
+}
+
+void codegen(void) {
+    Section = 0;
+    Location = 0;
+    instrulyze(Instru);
+    instrufree(Instru);
+
+    if (In) {
+        assertf(fclose(In) == 0, "");
+        In = nil;
+    }
+    if (Out) {
+        assertf(fclose(Out) == 0, "");
+        Out = nil;
     }
 }
+void bingen(void) {
+    FILE * output = fopen(out, "wb");
+    FILE * file   = fopen("a.txt", "w");
+    assertf(output != nil, "");
+    assertf(file != nil, "");
 
-void instrulyze(Instruction * instru) {
-}
+    u16 * content = calloc(0xffffff, sizeof(u16));
+    assertf(content != nil, "");
+    char * text = malloc(4 * 0xffffff * sizeof(char));
+    assertf(text != nil, "");
 
-void free_instru(Instruction * instru) {
-}
+    memset(text, '0', 4 * 0xffffff);
 
-void free_operand(Operand * operand) {
-    if (!operand) {
-        return;
+
+
+    In = fopen("temp.hex", "r");
+    assertf(In != nil, "");
+    readin();
+    scan();
+    do {
+        assertf(Token==TokenLParen, "Expecting '(' but received '%s'", Symbol);
+
+        scan();
+        assertf(Token==TokenInteger, "");
+        int loc = strtoi(Symbol);
+        int loc2 = loc * 4;
+
+        scan();
+        assertf(Token==TokenRParen, "");
+
+        scan();
+        while (Token==TokenInteger) {
+            u16 h = 0;
+            for (int i = 0; i < 4; i++) {
+                assertf(Token==TokenInteger, "");
+                char * hex = nil;
+                
+                Symbol = strpre(Symbol, "0b");
+                hex = itostr(strtoi(Symbol), -2);
+                assertf(hex != nil, "");
+                assertf(is_hexdigit(hex[0]) && hex[1] == '\0', "Hex: %s, Symbol: %s", hex, Symbol);
+                text[loc2++] = hex[0];
+
+                h += (hex2int(hex[0]) << (4 * i));
+                free(hex);
+
+                scan();
+            }
+            content[loc++] = h;
+        }
+    } while (Token != TokenEOF);
+    assertf(fclose(In) == 0, "");
+
+
+
+    int written;
+    written = fwrite(content, sizeof(u16), 0xffffff, output);
+    assertf(written == 0xffffff, "");
+    fprintf(file, "v2.0 raw\n");
+    for (int row = 0; row < 0xffffff / 16; row++) {
+        fprintf(file, "# 0x%06x\n", row * 16);
+        for (int i = 0; i < 64; i++) {
+            int loc = row * 64 + i;
+            fprintf(file, "%c", text[loc]);
+            if ((i+1) % 4 == 0) {
+                fprintf(file, " ");
+            }
+        }
+        fprintf(file, "\n");
     }
 
-    switch (operand->Tag) {
-        case operand_register:
-        {
-            free(operand->Register);
-        } break;
-
-        case operand_imm:
-        case operand_resb:
-        case operand_resw:
-        {
-            free(operand->IMM);
-        } break;
-
-        case operand_byte_label:
-        case operand_word_label:
-        case operand_j_label:
-        case operand_label_sectionpart:
-        case operand_label_offsetpart:
-        {
-            free(operand->Label);
-        } break;
-
-        case operand_byte_seg_imm16:
-        case operand_word_seg_imm16:
-        case operand_byte_seg_register:
-        case operand_word_seg_register:
-        case operand_j_seg_imm16:
-        case operand_j_seg_register:
-        {
-            free(operand->Segment);
-            free(operand->Offset);
-        } break;
-
-        case operand_db:
-        {
-            free(operand->DB);
-        } break;
-        case operand_dw:
-        {
-            free(operand->DW);
-        } break;
-
-        case operand_section:
-        {
-        } break;
-
-        default:
-        {
-            abortf("Error @func {free_operand}: Unknown tag: %d", operand->Tag);
-        } break;
-    }
-    free(operand);
+    assertf(fclose(output) == 0, "");
+    assertf(fclose(file) == 0, "");
 }
 
+void init(int argc, const char * const argv[]) {
+    parse_input(argc, argv);
+    parse_output(argc, argv);
+
+    In = fopen(in, "r");
+    assertf(In != nil, "Failed to read file %s", in);
+    Out = fopen("temp.hex", "w");
+
+    LabelTable = Table_Init();
+}
+void quit(void) {
+    if (in) {
+        free(in);
+        in = nil;
+    }
+    if (out) {
+        free(out);
+        out = nil;
+    }
+    Table_Free(LabelTable);
+    LabelTable = nil;
+    clear();
+    assertf(remove("temp.hex") == 0, "");
+}

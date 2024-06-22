@@ -8,6 +8,7 @@ OBJ := assembler.o
 OBJ += src/utils.o
 OBJ += src/str.o
 OBJ += src/table.o
+OBJ += src/instru.o
 OBJ += res/resource.o
 TARGET = assembler
 

@@ -1,14 +1,21 @@
 #include "header.h"
+#include "table.h"
 
-u64 Section;
-u64 Location;
-char * Label;
-FILE * In;
-FILE * Out;
+
+// input  file name
+char * in = nil;
+// output file name
+char * out = nil;
+TTable * LabelTable = nil;
+u64 Section = 0;
+u64 Location = 0;
+char * Label = nil;
+FILE * In = nil;
+FILE * Out = nil;
 int CharIn;
 TToken Token;
-String Symbol;
-Instruction * Instru;
+String Symbol = nil;
+Instruction * Instru = nil;
 
 const u8 instru_size_list[] = {
     2,

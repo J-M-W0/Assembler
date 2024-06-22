@@ -56,7 +56,7 @@ u64 Table_Get(TTable * table, const char * name) {
 }
 
 void Table_Set(TTable * table, const char * name, const u64 addr) {
-    assertf(Table_Contain(table, name), "Error: %s is not inside table!", name);
+    assertf(!Table_Contain(table, name), "Error: %s is already inside the table!", name);
     TNode * node = malloc(sizeof(TNode));
     assertf(node != nil, "Error @Table_Set with malloc");
     node->name = strdup(name);
