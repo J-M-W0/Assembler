@@ -33,8 +33,12 @@ Things to be noticed:
         - it contains the entry point for the program.
     - rasm.c
         - it contains the general debugging functions.
-        - e.g. @func {debug}, @func {info}, @func {errorf}
+        - e.g. @func *{debug}*, @func *{info}*, @func *{errorf}*
     - str.c
+        - it contains some string functions I defined by myself.
+        - for example 
+            - @func *{strpre}* which prepends the string with a header.
+            - @func *{strapp}* which appends the string with an extension.
     - table.c
     - utils.c
     - operand.c
