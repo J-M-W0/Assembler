@@ -4,22 +4,29 @@ CFLAGS += -Wall
 CFLAGS += -I./inc
 LFLAGS := -Wall
 
-OBJ := assembler.o 
-OBJ += src/utils.o
-OBJ += src/str.o
-OBJ += src/table.o
-OBJ += src/instru.o
-OBJ += res/resource.o
-TARGET = assembler
+LIB_DIR := lib
+SRC_DIR := src
 
-.PHONY: release clean
+OBJ := $(LIB_DIR)/main.o 
+OBJ += $(LIB_DIR)/rasm.o 
+OBJ += $(LIB_DIR)/str.o 
+OBJ += $(LIB_DIR)/utils.o 
+OBJ += $(LIB_DIR)/table.o 
+OBJ += $(LIB_DIR)/instru.o 
+OBJ += $(LIB_DIR)/operand.o 
+OBJ += $(LIB_DIR)/assemble.o 
+OBJ += $(LIB_DIR)/codegen.o 
+OBJ += $(LIB_DIR)/resources.o 
+TARGET = rasm
 
-release: $(TARGET)
+.PHONY: all clean
+
+all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	$(CC) $(LFLAGS) -o $@ $^
 
-%.o:%.c
+$(LIB_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:

@@ -1,142 +1,26 @@
-#include "header.h"
+#include "rasm.h"
 #include "table.h"
 
-
-// input  file name
-char * in = nil;
-// output file name
-char * out = nil;
-TTable * LabelTable = nil;
 u64 Section = 0;
 u64 Location = 0;
+
 char * Label = nil;
+
 FILE * In = nil;
 FILE * Out = nil;
+
 int CharIn;
 TToken Token;
 String Symbol = nil;
 Instruction * Instru = nil;
 
-const u8 instru_size_list[] = {
-    2,
-    4,
-    4,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    4,
-    2,
-    2,
-    2,
-    2,
-    2,
-    4,
-    4,
-    4,
-    2,
-    2,
-    2,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    4,
-    2,
-    6,
-    4,
-    4,
-    2,
-    2,
-    4,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    4,
-    4,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
+TTable * Labels = nil;
 
-    4, // 4 + n, dynamical size
-    2, // NOP
-    2, // END
-    4,
-    4,
+char * ifile = nil;
+char * ofile = nil;
+char * hexfile = nil;
 
-    0, // dynamic size, db
-    0, // dynamic size, dw
-};
-
-const char * const opcode_list[] = {
+const char * const instru_opcode_list[] = {
     "\tbbbb aaaa 0000 0000\n",
     "\t0000 aaaa 0001 0000\n\txxxx 0000 0000 0000\n",
     "\t0000 aaaa 0010 0000\n\txxxx 0000 0000 0000\n",
@@ -255,6 +139,7 @@ const char * const opcode_list[] = {
 
     "",
 };
+
 const char * const register_name_list[] = {
     "r0",
     "r1",
@@ -273,17 +158,18 @@ const char * const register_name_list[] = {
     "r14",
     "r15",
 
-    "ss",
-    "cs",
-    "ds",
-    "es",
-    "fs",
-    "sp",
-    "bp",
-    "ip",
+    "ss",   // r8
+    "cs",   // r9
+    "ds",   // r10
+    "reserved reg 1",   // r11
+    "reserved reg 2",   // r12
+    "sp",   // r13
+    "bp",   // r14
+    "ip",   // r15
 
     ""
 };
+
 const char * const register_code_list[] = {
     "0000",
     "0001",
@@ -313,6 +199,7 @@ const char * const register_code_list[] = {
 
     "",
 };
+
 const char * const kwlist[] = {
     "add",
     "shr",
@@ -433,48 +320,4 @@ const char * const kwlist[] = {
 
     "",
 };
-
-void debug(const char * fmt, ...) {
-    time_t now = time(NULL);
-    if (now == (time_t) -1) {
-        exit(2);
-    }
-
-    struct tm * localtm = localtime(&now);
-    if (!localtm) {
-        exit(3);
-    }
-
-    char * timestr = asctime(localtm);
-    if (!timestr) {
-        exit(4);
-    }
-
-    fprintf(stderr, "\t%s\t", timestr);
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    fprintf(stderr, "\n\n");
-}
-
-void abortf(const char * fmt, ...) {
-    fprintf(stderr, "Error: ");
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-    exit(EXIT_FAILURE);
-}
-
-void errorf(const char * file, const int line, const char * fmt, ...) {
-    fprintf(stderr, "%s:%d: ", file, line);
-    va_list args;
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\n");
-    va_end(args);
-    exit(EXIT_FAILURE);
-}
 

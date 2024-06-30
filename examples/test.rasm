@@ -1,0 +1,41 @@
+    jmp main
+
+section code 0xa
+main:
+    mov ss, 0x00
+    mov sp, 0x00
+
+    mov r0, 0xeeee
+    mov word [r0], 0xfe
+    mov r5, word [r0]
+
+    call hello
+
+    push 0x1234
+    pop r2
+
+    mov r3, 0x1010
+    cmp r0, r3
+    ja .above
+
+    mov r4, 0x1234
+    END
+
+.above:
+    mov r4, 0xabcd
+    END
+
+section functions 0xd
+hello:
+    mov r1, 0x1111
+    ret
+
+
+; After executing the a.txt in Logisim, the output should be as followed:
+;   r0 == 0xeeee
+;   r1 == 0x1111
+;   r2 == 0x1234
+;   r3 == 0x1010
+;   r4 == 0xabcd
+;   r5 == 0x00fe
+

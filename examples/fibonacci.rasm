@@ -1,0 +1,44 @@
+    jmp main
+
+section code 0x7
+main:
+    ; @param push <N>
+    push 6
+    call fib    ; the return value is in r0
+    pop0        ; to clear the stack used for ```push 2```
+    END
+
+section functions 0xa
+fib:
+    push bp
+    mov bp, sp
+    sub bp, 3
+
+    mov r0, word [bp]
+    cmp r0, 1
+    ja .recur
+    
+    pop bp
+    ret
+    
+.recur:
+    dec r0
+    mov word [bp], r0
+    push r0
+    call fib
+    pop0
+    mov r1, r0
+    push r1
+
+    mov r0, word [bp]
+    dec r0
+    push r0
+    call fib
+    pop0
+    
+    pop r1
+    add r0, r1
+
+    pop bp
+    ret
+

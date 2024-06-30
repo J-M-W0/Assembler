@@ -1,5 +1,5 @@
-#ifndef __HEADER_H
-#define __HEADER_H
+#ifndef __RASM_HEADER_H
+#define __RASM_HEADER_H
 #if defined(__APPLE__)
     typedef char i8;
     typedef unsigned char u8;
@@ -14,16 +14,20 @@
     typedef __int128 i128;
     typedef unsigned __int128 u128;
 #endif // __SIZEOF_INT128__
-#define error(...) errorf(__FILE__, __LINE__, __VA_ARGS__)
-#define assert(expr)                                        \
-    do {                                                    \
-        if (!(expr)) error("Assertion failed: " #expr);     \
-    } while (0)
+#define nil NULL
+#define abortf(...) errorf(__FILE__, __LINE__, __VA_ARGS__)
+#define error(...)  errorf(__FILE__, __LINE__, __VA_ARGS__)
 #define assertf(expr, ...)                                  \
     do {                                                    \
-        if (!(expr)) error(__VA_ARGS__);                    \
+        if (!(expr)) error("Assertion failed: \e[1;31m" #expr "\e[0m\n\t" __VA_ARGS__); \
     } while (0)
-#define nil NULL
+#define Free(ptr)       \
+    do {                \
+        if (ptr) {      \
+            free(ptr);  \
+            ptr = nil;  \
+        }               \
+    } while (0)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,10 +41,10 @@
 #include <limits.h>
 #include <time.h>
 
-typedef long long           ll;
-typedef unsigned long       ul;
-typedef unsigned long long  ull;
-typedef char *              String;
+typedef long long ll;
+typedef unsigned long ul;
+typedef unsigned long long ull;
+typedef char * String;
 
 typedef enum TInstru {
     ADD,    // 0. add ra, rb
@@ -235,9 +239,6 @@ typedef enum TInstru {
     RESB,
     RESW,
     SECTION,
-
-
-    instr_count,
 } TInstru;
 
 typedef enum {
@@ -264,10 +265,6 @@ typedef enum {
     operand_j_label,
     operand_j_seg_imm16,
     operand_j_seg_register,
-    
-    operand_none,
-
-    operand_type_count,
 } TOperand;
 
 typedef struct {
@@ -276,8 +273,8 @@ typedef struct {
     union {
         char * Register;
         char * IMM;
-        
         char * Label;
+        u64 imm;
 
         struct {
             char * Segment;
@@ -286,30 +283,25 @@ typedef struct {
 
         struct {
             union {
-                char * DB;
-                int  * DW;
+                i8   * DB;
+                i16  * DW;
             };
             int DCOUNT;
-        };
-
-        struct {
-            u64 section;
         };
     };
 } Operand;
 
 typedef struct Instruction {
     TInstru Tag;
+    struct Instruction * next;
 
     union {
-        Operand * operand;
+        Operand * single;
         struct {
             Operand * left;
             Operand * right;
         };
     };
-    
-    struct Instruction * next;
 } Instruction;
 
 typedef enum {
@@ -376,19 +368,19 @@ typedef enum {
     TokenR5,
     TokenR6,
     TokenR7,
-    TokenR8,
-    TokenR9,
-    TokenR10,
-    TokenR11,
-    TokenR12,
-    TokenR13,
-    TokenR14,
-    TokenR15,
+    TokenR8,    // ss
+    TokenR9,    // cs
+    TokenR10,   // ds
+    TokenR11,   // reserved reg 1
+    TokenR12,   // reserved reg 2
+    TokenR13,   // sp
+    TokenR14,   // bp
+    TokenR15,   // ip
     TokenSS,
     TokenCS,
     TokenDS,
-    TokenES,
-    TokenFS,
+    TokenRESERVEDREG1,
+    TokenRESERVEDREG2,
     TokenSP,
     TokenBP,
     TokenIP,
@@ -428,7 +420,7 @@ typedef enum {
     TokenRBrace,
     TokenDollar,
 
-    TokenLabel,
+    TokenIdent,
     TokenInteger,
     TokenUnknown,
     TokenEOF,
@@ -436,8 +428,10 @@ typedef enum {
     TokenCount,
 } TToken;
 
-void debug(const char * fmt, ...);
-void abortf(const char * fmt, ...);
-void errorf(const char * file, const int line, const char * fmt, ...);
+void debug(char * fmt, ...);
+void info(char * fmt, ...);
+void errorf(const char * filename, const int currline, char * fmt, ...);
 
-#endif // __HEADER_H
+#endif // __RASM_HEADER_H
+
+

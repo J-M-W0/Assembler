@@ -1,8 +1,5 @@
-#include "header.h"
-#include "table.h"
+#include "rasm.h"
 #include "utils.h"
-#include "str.h"
-#include "instru.h"
 
 extern FILE * In;
 extern FILE * Out;
@@ -17,32 +14,8 @@ extern const char * const kwlist[];
 extern const char * const opcode_list[];
 extern const char * const register_name_list[];
 extern const char * const register_code_list[];
-extern TTable * LabelTable;
 
-extern char * in;
-extern char * out;
 
-void parse_input(int argc, const char * const argv[]) {
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-i") == 0) {
-            assertf(i + 1 < argc, "Failed to parse input file name!");
-            in = strdup(argv[i+1]);
-            assertf(strloc(in, ".as") != -1, "%s is not a valid input file name, expected with .as extension!", in);
-            return;
-        }
-    }
-    abortf("Failed to parse input file name");
-}
-void parse_output(int argc, const char * const argv[]) {
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-o") == 0) {
-            assertf(i + 1 < argc, "Failed to parse output file name!");
-            out = strdup(argv[i+1]);
-            return;
-        }
-    }
-    out = strdup("a.out");
-}
 int search(const char * const table[], const char * value) {
     assertf(table != nil, "Error @func {search}: @param {table} (null)");
     assertf(value != nil, "Value @func {search}: @param {value} (null)");
@@ -94,7 +67,7 @@ void readin(void) {
         else {
             // not a comment, rewind the process.
             int ret = fseek(In, -1, SEEK_CUR);
-            assert(ret == 0);
+            assertf(ret == 0);
             CharIn = '/';
         }
     }
@@ -127,7 +100,7 @@ void readin(void) {
         else {
             // not a comment, rewind the process.
             int ret = fseek(In, -1, SEEK_CUR);
-            assert(ret == 0);
+            assertf(ret == 0);
             CharIn = '(';
         }
     }
@@ -139,44 +112,48 @@ void readin(void) {
     }
 }
 
-void clear(void) {
+void tokenfree(void) {
     Token = TokenUnknown;
-    if (Symbol) {
-        free(Symbol);
-        Symbol = nil;
-    }
+    Free(Symbol);
 }
 
 static void parse_ident(void) {
-    assert(is_label(CharIn));
+    assertf(is_label(CharIn));
+
 
     while (is_label(CharIn)) {
         Symbol = strapp(Symbol, (char *) &CharIn);
         readin();
     }
+
+
     skipnewline();
 }
-
 static void parse_hex_digit(void) {
-    assert(is_hexdigit(CharIn));
+    assertf(is_hexdigit(CharIn));
+
 
     while (is_hexdigit(CharIn)) {
         Symbol = strapp(Symbol, (char *) &CharIn);
         readin();
     }
+
+
     skipnewline();
 }
 static void parse_oct_digit(void) {
-    assert(is_octdigit(CharIn));
-    
+
+
     while (is_octdigit(CharIn)) {
         Symbol = strapp(Symbol, (char *) &CharIn);
         readin();
     }
+
+
     skipnewline();
 }
 static void parse_bin_digit(void) {
-    assert(is_bindigit(CharIn));
+    assertf(is_bindigit(CharIn));
     
     while (is_bindigit(CharIn)) {
         Symbol = strapp(Symbol, (char *) &CharIn);
@@ -185,23 +162,28 @@ static void parse_bin_digit(void) {
     skipnewline();
 }
 static void parse_digit(void) {
-    assert(is_digit(CharIn));
+    assertf(is_digit(CharIn));
+
 
     if (CharIn == '0') {
         Symbol = strapp(Symbol, (char *) &CharIn);
         readin();
-        Symbol = strapp(Symbol, (char *) &CharIn);
         if (CharIn == 'x' || CharIn == 'X') {
+            Symbol = strapp(Symbol, (char *) &CharIn);
             readin();
             parse_hex_digit();
         }
         else if (CharIn == 'b' || CharIn == 'B') {
+            Symbol = strapp(Symbol, (char *) &CharIn);
             readin();
             parse_bin_digit();
         }
         else if (is_octdigit(CharIn)) {
+            Symbol = strapp(Symbol, (char *) &CharIn);
             readin();
             parse_oct_digit();
+        }
+        else if (is_newline(CharIn) || is_whitespace(CharIn)) {
         }
         else {
             abortf("Error: %s is not a valid numeric string!", Symbol);
@@ -209,20 +191,25 @@ static void parse_digit(void) {
         return;
     }
 
+
     while (is_digit(CharIn)) {
         Symbol = strapp(Symbol, (char *) &CharIn);
         readin();
     }
+
+
     skipnewline();
 }
+
 void scan(void) {
-    clear();
+    tokenfree();
     skipnewline();
-    if (is_alpha(CharIn) || CharIn == '.') {
+
+    if (is_letter(CharIn) || CharIn=='.') {
         parse_ident();
         int index = search(kwlist, Symbol);
         if (index == -1) {
-            Token = TokenLabel;
+            Token = TokenIdent;
         }
         else {
             Token = (TToken) index;
@@ -293,6 +280,7 @@ void scan(void) {
     }
 }
 
+
 bool is_upper(const char c) {
     return c >= 'a' && c <= 'z';
 }
@@ -353,6 +341,24 @@ bool is_token_register(TToken token) {
 }
 const char * register_code(const char * reg) {
     assertf(is_register(reg), "Error: %s is not a register name!", reg);
+    if (strcmp(reg, "ss") == 0) {
+        return "1000";
+    }
+    else if (strcmp(reg, "cs") == 0) {
+        return "1001";
+    }
+    else if (strcmp(reg, "ds") == 0) {
+        return "1010";
+    }
+    else if (strcmp(reg, "sp") == 0) {
+        return "1101";
+    }
+    else if (strcmp(reg, "bp") == 0) {
+        return "1110";
+    }
+    else if (strcmp(reg, "ip") == 0) {
+        return "1111";
+    }
     return register_code_list[search(register_name_list, reg)];
 }
 
@@ -382,119 +388,4 @@ int hex2int(const char c) {
         return c - 'A';
     }
     return -1;
-}
-
-void codegen(void) {
-    Section = 0;
-    Location = 0;
-    instrulyze(Instru);
-    instrufree(Instru);
-
-    if (In) {
-        assertf(fclose(In) == 0, "");
-        In = nil;
-    }
-    if (Out) {
-        assertf(fclose(Out) == 0, "");
-        Out = nil;
-    }
-}
-void bingen(void) {
-    FILE * output = fopen(out, "wb");
-    FILE * file   = fopen("a.txt", "w");
-    assertf(output != nil, "");
-    assertf(file != nil, "");
-
-    u16 * content = calloc(0xffffff, sizeof(u16));
-    assertf(content != nil, "");
-    char * text = malloc(4 * 0xffffff * sizeof(char));
-    assertf(text != nil, "");
-
-    memset(text, '0', 4 * 0xffffff);
-
-
-
-    In = fopen("temp.hex", "r");
-    assertf(In != nil, "");
-    readin();
-    scan();
-    do {
-        assertf(Token==TokenLParen, "Expecting '(' but received '%s'", Symbol);
-
-        scan();
-        assertf(Token==TokenInteger, "");
-        int loc = strtoi(Symbol);
-        int loc2 = loc * 4;
-
-        scan();
-        assertf(Token==TokenRParen, "");
-
-        scan();
-        while (Token==TokenInteger) {
-            u16 h = 0;
-            for (int i = 0; i < 4; i++) {
-                assertf(Token==TokenInteger, "");
-                char * hex = nil;
-                
-                Symbol = strpre(Symbol, "0b");
-                hex = itostr(strtoi(Symbol), -2);
-                assertf(hex != nil, "");
-                assertf(is_hexdigit(hex[0]) && hex[1] == '\0', "Hex: %s, Symbol: %s", hex, Symbol);
-                text[loc2++] = hex[0];
-
-                h += (hex2int(hex[0]) << (4 * i));
-                free(hex);
-
-                scan();
-            }
-            content[loc++] = h;
-        }
-    } while (Token != TokenEOF);
-    assertf(fclose(In) == 0, "");
-
-
-
-    int written;
-    written = fwrite(content, sizeof(u16), 0xffffff, output);
-    assertf(written == 0xffffff, "");
-    fprintf(file, "v2.0 raw\n");
-    for (int row = 0; row < 0xffffff / 16; row++) {
-        fprintf(file, "# 0x%06x\n", row * 16);
-        for (int i = 0; i < 64; i++) {
-            int loc = row * 64 + i;
-            fprintf(file, "%c", text[loc]);
-            if ((i+1) % 4 == 0) {
-                fprintf(file, " ");
-            }
-        }
-        fprintf(file, "\n");
-    }
-
-    assertf(fclose(output) == 0, "");
-    assertf(fclose(file) == 0, "");
-}
-
-void init(int argc, const char * const argv[]) {
-    parse_input(argc, argv);
-    parse_output(argc, argv);
-
-    In = fopen(in, "r");
-    assertf(In != nil, "Failed to read file %s", in);
-    Out = fopen("temp.hex", "w");
-
-    LabelTable = Table_Init();
-}
-void quit(void) {
-    if (in) {
-        free(in);
-        in = nil;
-    }
-    if (out) {
-        free(out);
-        out = nil;
-    }
-    Table_Free(LabelTable);
-    LabelTable = nil;
-    clear();
-    assertf(remove("temp.hex") == 0, "");
 }

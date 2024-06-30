@@ -1,2 +1,11 @@
-.clangd
-.DS_Store
+# Ignore all dot files
+.*
+# Do not ignore .gitignore
+!.gitignore
+# Do not ignore .env file
+!.env
+# Ignore all obj files
+*.o
+# Ignore the binary file
+rasm
+
