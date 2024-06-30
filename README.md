@@ -27,8 +27,25 @@ Things to be noticed:
 
 
 # File Strucure
-1. src/
-2. inc/
-3. lib/
-4. examples/
+1. ***src/***
+- it contains the source files.
+>- main.c
+>-- it contains the entry point for the program.
+>- rasm.c
+>-- it contains the general debugging functions.
+>-- e.g. @func {debug}, @func {info}, @func {errorf}
+>- str.c
+>- table.c
+>- utils.c
+>- operand.c
+>- instru.c
+>- assemble.c
+>- codegen.c
+>- resources.c
+2. ***inc/***
+- it contains the header files.
+3. ***lib/***
+- it contains the compiled object files to be linked.
+4. ***examples/***
+- it contains example assembly code.
 
