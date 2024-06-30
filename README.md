@@ -29,19 +29,19 @@ Things to be noticed:
 # File Strucure
 1. ***src/***
 - it contains the source files.
->- main.c
->-- it contains the entry point for the program.
->- rasm.c
->-- it contains the general debugging functions.
->-- e.g. @func {debug}, @func {info}, @func {errorf}
->- str.c
->- table.c
->- utils.c
->- operand.c
->- instru.c
->- assemble.c
->- codegen.c
->- resources.c
+    - main.c
+        - it contains the entry point for the program.
+    - rasm.c
+        - it contains the general debugging functions.
+        - e.g. @func {debug}, @func {info}, @func {errorf}
+    - str.c
+    - table.c
+    - utils.c
+    - operand.c
+    - instru.c
+    - assemble.c
+    - codegen.c
+    - resources.c
 2. ***inc/***
 - it contains the header files.
 3. ***lib/***
