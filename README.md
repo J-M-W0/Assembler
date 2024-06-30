@@ -35,21 +35,46 @@ Things to be noticed:
         - it contains the general debugging functions.
         - e.g. @func *{debug}*, @func *{info}*, @func *{errorf}*
     - str.c
-        - it contains some string functions I defined by myself.
+        - it contains some string functions I defined to use for myself.
         - for example 
             - @func *{strpre}* which prepends the string with a header.
             - @func *{strapp}* which appends the string with an extension.
+            - @func *{strloc}* which locates a substring inside a string.
+            - @func *{strtoi}* which converts a string into an integer.
+            - @func *{itostr}* which converts an integer into string.
+            - @func *{strrev}* which reverses a string.
     - table.c
+        - it contains the functions for manipulating the label table.
     - utils.c
+        - it contains the utility functions used for the assembler.
     - operand.c
+        - it contains the functions to parse the operands.
     - instru.c
+        - it contains the functions to parse the instruction.
     - assemble.c
+        - it contains the functions to assemble.
     - codegen.c
+        - it contains the functions to generate code.
     - resources.c
+        - it contains the resources.
 2. ***inc/***
 - it contains the header files.
+    - rasm.h
+    - str.h
+    - table.h
+    - utils.h
+    - operand.h
+    - instru.h
+    - assemble.h
+    - codegen.h
 3. ***lib/***
 - it contains the compiled object files to be linked.
 4. ***examples/***
 - it contains example assembly code.
+    - test.rasm
+        - a testing file.
+    - fibonacci.rasm
+        - to calculate a RASM inside my customied CPU.
+        - it will return the result in register *r0*.
+        - parameter is stored on stack.
 
