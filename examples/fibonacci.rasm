@@ -1,8 +1,17 @@
     jmp main
 
+; fib(0) = 0
+; fib(1) = 1
+; fib(2) = 1
+; fib(3) = 2
+; fib(4) = 3
+; fib(5) = 5
+; fib(6) = 8 == 0b 1000
+
 section code 0x7
 main:
     ; @param push <N>
+    ; fib (N)
     push 6
     call fib    ; the return value is in r0
     pop0        ; to clear the stack used for ```push 2```

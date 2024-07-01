@@ -33,6 +33,9 @@ Things to be noticed:
 > $ rasm ./example/fibonacci.rasm
 4. then open logisim with the *cpu.circ* on [CPU](https://github.com/J-M-W0/CPU), load the a.txt file into the RAM, can run it.
 
+Or see the YouTube link video where I demonstrated it: 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/https://youtu.be/sKxlbndWQQM" frameborder="0" allowfullscreen></iframe>
+
 # File Strucure
 1. ***src/***
 - it contains the source files.
