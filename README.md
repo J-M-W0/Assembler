@@ -25,6 +25,13 @@ Things to be noticed:
 4. if no output name given, it will be the defult name  *a.out*.
 5. it will also generate a text file named *a.txt* which could be used for **Logisim** to test the CPU I've designed.
 
+# Example Usage
+1. navigate to the directory of the project, undeer the same directory of the *Makefile*.
+2. type on your prompt *make*.
+> $ make
+3. then compile a example rasm file:
+> $ rasm ./example/fibonacci.rasm
+4. then open logisim with the *cpu.circ* on [CPU](https://github.com/J-M-W0/CPU), load the a.txt file into the RAM, can run it.
 
 # File Strucure
 1. ***src/***
