@@ -1,41 +1,36 @@
-# Project Description
+# RASM - Simple Assembler
 
-Hi there, my name is **Junzhe Wang**.
-This project is about a assembler I wrote for the CPU I've designed. 
+__RASM__ is a simple assembler designed for educational purposes. 
+It translates assembly language code into machine code. 
+This project demonstrates basic assembler functionalities including lexical analysis, parsing, and code generation.
 
-[CPU](https://github.com/J-M-W0/CPU)
+## Table of Contents
+- [Introduction](#introduction)
+- [Features](#features)
+- [File Structure](#file-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Example](#example)
+- [Demonstration Video](#demostration-video)
 
-I'll simply name this project RASM (runty assembler), because this assembler is so small and tiny haha.
+## Introduction
 
-To run the program, after compilation, simply type on your prompt:
+1. __RASM__ is a straightforward assembler implemented to help understand the fundamentals of assembly language processing  and code generation. 
+It is written in C language using the C17 standard.
 
-> rasm input [-o output]
+2. It generates a custome executable binary code which is compatible with my custome designed [CPU](https://github.com/J-M-W0/CPU).
 
-Example:
-> rasm test.rasm
-- this will generate a binary file *a.out* and text file *a.txt* which can be used in Logisim.
+3. The name __RASM__ came from Runty ASseMbler, because this assembler is so small and tiny haha.
 
-> rasm test.rasm -o test
-- this will generate a binary file *test* and text file *a.txt* which can be used in Logisim.
+## Features
 
-Things to be noticed:
-1. the input file name came as the first parameter , and must be of ending ***.rasm***.
-2. the output name will be identical to what you've typed, 
-3. the output file is in binary format.
-4. if no output name given, it will be the defult name  *a.out*.
-5. it will also generate a text file named *a.txt* which could be used for **Logisim** to test the CPU I've designed.
+- **Lexical Analysis**: Tokenizes the assembly language code.
+- **Parsing**: Constructs the syntax tree from tokens.
+- **Code Generation**: Produces machine code from the syntax tree.
+- **Error Handling**: Reports lexical and syntactic errors.
 
-# Example Usage
-1. navigate to the directory of the project, undeer the same directory of the *Makefile*.
-2. type on your prompt *make*.
-> $ make
-3. then compile a example rasm file:
-> $ rasm ./example/fibonacci.rasm
-4. then open logisim with the *cpu.circ* on [CPU](https://github.com/J-M-W0/CPU), load the a.txt file into the RAM, can run it.
+## File Structure
 
-Or see the YouTube link video where I demonstrated it: [demo](https://youtu.be/sKxlbndWQQM)
-
-# File Strucure
 1. ***src/***
 - it contains the source files.
     - main.c
@@ -86,4 +81,109 @@ Or see the YouTube link video where I demonstrated it: [demo](https://youtu.be/s
         - to calculate a RASM inside my customied CPU.
         - it will return the result in register *r0*.
         - parameter is stored on stack.
+
+## Installation
+
+To install and run RASM, you need to have at least one C compiler installed on your system. 
+You can download and install GCC from [the official website](https://gcc.gnu.org/install/download.html).
+
+1. Clone the repository:
+    ```sh
+    git clone <repo>
+    ```
+2. Navigate to the project directory:
+    ```sh
+    cd <install-directory>
+    ```
+3. Compile the assembler:
+    ```sh
+    make
+    ```
+
+## Usage
+
+After compiling, you can run RASM from the command line. 
+The assembler takes an assembly source file as input and generates a machine code file.
+
+    ```sh
+    ./rasm <sourcefile> [-o <outputfile>]
+    ```
+
+Please notice that the __sourcefile__ must be provided and have to be ended with __.rasm__.
+And the __outputfile__ is optional, if none is provided, it will generate a __a.out__ as binary file.
+And after all, it will generate a __a.txt__ file which can be used with the [CPU](https://github.com/J-M-W0/CPU).
+
+## Example
+
+1. Create a source file __fibonacci.rasm__ with the following code:
+```asm
+        jmp main
+
+    ; fib(0) = 0
+    ; fib(1) = 1
+    ; fib(2) = 1
+    ; fib(3) = 2
+    ; fib(4) = 3
+    ; fib(5) = 5
+    ; fib(6) = 8 == 0b 1000
+
+    section code 0x7
+    main:
+        ; @param push <N>
+        ; fib (N)
+        push 6
+        call fib    ; the return value is in r0
+        pop0        ; to clear the stack used for ```push 2```
+        END
+
+    section functions 0xa
+    fib:
+        push bp
+        mov bp, sp
+        sub bp, 3
+
+        mov r0, word [bp]
+        cmp r0, 1
+        ja .recur
+        
+        pop bp
+        ret
+        
+    .recur:
+        dec r0
+        mov word [bp], r0
+        push r0
+        call fib
+        pop0
+        mov r1, r0
+        push r1
+
+        mov r0, word [bp]
+        dec r0
+        push r0
+        call fib
+        pop0
+        
+        pop r1
+        add r0, r1
+
+        pop bp
+        ret
+```
+
+2. Run the assembler:
+```sh
+    ./rasm fibonacci.rasm -o fibo
+```
+
+3. The generated machine code and executable binary text will be in the same directory.
+
+## Demonstration Video
+
+You can also see the YouTube link video where I demonstrated it: [demo](https://youtu.be/sKxlbndWQQM)
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+
 

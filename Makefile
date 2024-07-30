@@ -2,6 +2,7 @@ CC := clang
 CFLAGS := -c
 CFLAGS += -Wall 
 CFLAGS += -I./inc
+CFLAGS += -std=c17
 LFLAGS := -Wall
 
 LIB_DIR := lib
