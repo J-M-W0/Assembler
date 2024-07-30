@@ -104,7 +104,6 @@ You can download and install GCC from [the official website](https://gcc.gnu.org
 
 After compiling, you can run RASM from the command line. 
 The assembler takes an assembly source file as input and generates a machine code file.
-
     ```sh
     ./rasm <sourcefile> [-o <outputfile>]
     ```
